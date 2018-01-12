@@ -80,10 +80,10 @@ var MailTemplateAdapter = function MailTemplateAdapter(mailOptions) {
       return new Promise(function (resolve, reject) {
 
         var to = options.user.get("email");
-        var text = replacePlaceHolder(resetPasswordText, options);
+        var html = replacePlaceHolder(resetPasswordText, options);
         var subject = replacePlaceHolder(resetPasswordSubject, options);
 
-        _this2.sendMail({ text: text, to: to, subject: subject }).then(function (json) {
+        _this2.sendMail({ html: html, to: to, subject: subject }).then(function (json) {
           resolve(json);
         }, function (err) {
           reject(err);
