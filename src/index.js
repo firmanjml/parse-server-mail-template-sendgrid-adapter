@@ -79,10 +79,10 @@ let MailTemplateAdapter = mailOptions => {
       return new Promise((resolve, reject) => {
 
         var to = options.user.get("email");
-        var text = replacePlaceHolder(resetPasswordText, options);
+        var html = replacePlaceHolder(resetPasswordText, options);
         var subject = replacePlaceHolder(resetPasswordSubject, options);
 
-        this.sendMail({ text: text, to: to, subject: subject }).then(json => {
+        this.sendMail({ html: html, to: to, subject: subject }).then(json => {
           resolve(json);
         }, err => {
           reject(err);
