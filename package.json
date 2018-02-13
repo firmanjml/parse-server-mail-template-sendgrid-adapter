@@ -1,7 +1,7 @@
 {
-  "name": "parse-server-mail-template-adapter",
-  "version": "1.0.2",
-  "description": "Adapter for customizing email template of parse-server",
+  "name": "@innocells/parse-server-mail-template-sendgrid-adapter",
+  "version": "0.0.1",
+  "description": "Adapter for customizing email template of parse-server, including sendgrid options",
   "main": "build/index.js",
   "scripts": {
     "build": "./node_modules/.bin/babel src/ -d build/",
@@ -9,19 +9,16 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/jingwanhsu/parse-server-mail-template-adapter.git"
+    "url": "git+https://github.com/InnoCells/parse-server-mail-template-sendgrid-adapter.git"
   },
   "keywords": [
     "parse-server",
     "mail",
-    "template"
+    "template",
+    "sendgrid"
   ],
-  "author": "jingwan",
-  "license": "MIT",
-  "bugs": {
-    "url": "https://github.com/jingwanhsu/parse-server-mail-template-adapter/issues"
-  },
-  "homepage": "https://github.com/jingwanhsu/parse-server-mail-template-adapter#readme",
+  "author": "Innocells",
+  "license": "ISC",
   "devDependencies": {
     "babel-cli": "^6.14.0",
     "babel-preset-es2015": "^6.14.0"
