@@ -17,6 +17,9 @@
     "template",
     "sendgrid"
   ],
+  "publishConfig": {
+    "access": "public"
+  },
   "author": "Innocells",
   "license": "ISC",
   "devDependencies": {
