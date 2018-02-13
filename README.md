@@ -39,9 +39,30 @@ Install from npm:
       })
     });
 
+In version 0.0.4 or above, is possible to override the 'Recovery email' sended from Parse. It's possible to configure sendgrid template (with sendgridTemplateId) and send recovery mail from sendgrid api.
+
+## Configuration
+emailAdapter: MailTemplateAdapter({
+    adapter: SimpleSendGridAdapter({
+      apiKey: process.env.SENDGRID_APP_ID,
+      fromAddress: process.env.SENDGRID_FROM_ADDRESS
+    }),
+    template: {
+      resetPassword: {
+        subject: 'Mail Subject',
+        fromAddress: process.env.SENDGRID_FROM_ADDRESS,
+        sendgridTemplateId: process.env.SENDGRID_PASSWORD_RECOVERY_TEMPLATE_ID,
+        sendgridApiKey: process.env.SENDGRID_APP_ID
+      }
+    }
+  })
+
 There are some variables can be used in subject and body:
 
 - `%username%`: the user's display name
 - `%email%`: the user's email address
 - `%appname%`: your application's display name
 - `%link%`: the link the user must click to perform the requested action
+
+
+
