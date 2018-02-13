@@ -70,8 +70,13 @@ var MailTemplateAdapter = function MailTemplateAdapter(mailOptions) {
       resetPasswordText = resetPassword.body;
     } else if (resetPassword.bodyFile) {
       resetPasswordText = _fs2.default.readFileSync(resetPassword.bodyFile, "utf8");
-    } else if (resetPassword.sendgridTemplateId && !resetPassword.fromAddress) {
-      throw 'MailTemplateAdapter resetPassword requires fromAddress when use sendgrid.';
+    } else if (resetPassword.sendgridTemplateId) {
+      if (!resetPassword.fromAddress) {
+        throw 'MailTemplateAdapter resetPassword requires fromAddress when use sendgrid.';
+      }
+      if (!resetPassword.sendgridApiKey) {
+        throw 'MailTemplateAdapter resetPassword requires sendgridApiKey when use sendgrid';
+      }
     } else if (!resetPassword.sendgridTemplateId) {
       throw 'MailTemplateAdapter resetPassword requires body.';
     }
@@ -85,7 +90,7 @@ var MailTemplateAdapter = function MailTemplateAdapter(mailOptions) {
         var html = replacePlaceHolder(resetPasswordText, options);
         var sendgridTemplateId = resetPassword.sendgridTemplateId;
         if (sendgridTemplateId) {
-          var sendgrid = require('sendgrid')(resetPassword.apiKey);
+          var sendgrid = require('sendgrid')(resetPassword.sendgridApiKey);
           var request = sendgrid.emptyRequest();
           request.body = {
             from: { email: resetPassword.fromAddress },
@@ -93,7 +98,12 @@ var MailTemplateAdapter = function MailTemplateAdapter(mailOptions) {
               to: [{
                 email: to
               }],
-              substitutions: { '%LINK%': options.link }
+              substitutions: {
+                '%link%': options.link,
+                '%email%': options.user.get("email"),
+                '%username%': options.user.get("username"),
+                '%appname%': options.appName
+              }
             }],
             subject: resetPassword.subject,
             template_id: resetPassword.sendgridTemplateId
