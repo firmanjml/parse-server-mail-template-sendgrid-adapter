@@ -1,6 +1,6 @@
 # parse-server-mail-template-adapter
 
-Adapter for customizing email template of parse-server using Sendgrid
+Email adapter for Parse Server which uses Sendgrid templates
 
 ## Installation
 
@@ -17,9 +17,9 @@ npm install @innocells/parse-server-mail-template-sendgrid-adapter --save
     const api = new ParseServer({
       // ... Other necessary parameters ...
       appName: 'myAppName',
-      publicServerURL: 'http://localhost:1337/parse', // Don't forget to change to https if needed
+      publicServerURL: 'http://localhost:1337/parse',
       emailAdapter: MailTemplateAdapter({
-        // Take SimpleSendGridAdapter for example, you can use any other adapter instead
+        // Take any email as your default adapter, for example SimpleSendGridAdapter
         adapter: SimpleSendGridAdapter({
           apiKey: 'sendgridApiKey',
           fromAddress: 'fromEmailAddress',
@@ -37,7 +37,7 @@ npm install @innocells/parse-server-mail-template-sendgrid-adapter --save
       })
     });
 
-There are some variables can be used in subject and body:
+These variables can be used in your template body:
 
 * `%username%`: the user's display name
 * `%email%`: the user's email address
