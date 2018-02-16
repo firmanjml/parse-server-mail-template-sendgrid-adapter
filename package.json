@@ -11,7 +11,12 @@
     "type": "git",
     "url": "git+https://github.com/InnoCells/parse-server-mail-template-sendgrid-adapter.git"
   },
-  "keywords": ["parse-server", "mail", "template", "sendgrid"],
+  "keywords": [
+    "parse-server",
+    "mail",
+    "template",
+    "sendgrid"
+  ],
   "publishConfig": {
     "access": "public"
   },
