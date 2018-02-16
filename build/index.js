@@ -1,13 +1,13 @@
-"use strict";
+'use strict';
 
-var _fs = require("fs");
+var _fs = require('fs');
 
 var _fs2 = _interopRequireDefault(_fs);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 var replacePlaceHolder = function replacePlaceHolder(text, options) {
-  return text.replace(/%email%/g, options.user.get("email")).replace(/%username%/g, options.user.get("username")).replace(/%appname%/g, options.appName).replace(/%link%/g, options.link);
+  return text.replace(/%email%/g, options.user.get('email')).replace(/%username%/g, options.user.get('username')).replace(/%appname%/g, options.appName).replace(/%link%/g, options.link);
 };
 
 var MailTemplateAdapter = function MailTemplateAdapter(mailOptions) {
@@ -20,7 +20,7 @@ var MailTemplateAdapter = function MailTemplateAdapter(mailOptions) {
     return adapter;
   }
 
-  var customeized = {};
+  var customized = {};
 
   if (mailOptions.template.verification) {
     var verification = mailOptions.template.verification;
@@ -29,30 +29,67 @@ var MailTemplateAdapter = function MailTemplateAdapter(mailOptions) {
       throw 'MailTemplateAdapter verification requires subject.';
     }
     var verificationSubject = verification.subject;
-    var verificationText = "";
+    var verificationText = '';
 
     if (verification.body) {
       verificationText = verification.body;
     } else if (verification.bodyFile) {
-      verificationText = _fs2.default.readFileSync(verification.bodyFile, "utf8");
+      verificationText = _fs2.default.readFileSync(verification.bodyFile, 'utf8');
+    } else if (verification.sendgridTemplateId) {
+      if (!verification.fromAddress) {
+        throw 'MailTemplateAdapter verification requires fromAddress when use sendgrid.';
+      }
+      if (!verification.sendgridApiKey) {
+        throw 'MailTemplateAdapter verification requires sendgridApiKey when use sendgrid';
+      }
     } else {
       throw 'MailTemplateAdapter verification requires body.';
     }
 
-    customeized.sendVerificationEmail = function (options) {
+    customized.sendVerificationEmail = function (options) {
       var _this = this;
 
       return new Promise(function (resolve, reject) {
-
-        var to = options.user.get("email");
+        var to = options.user.get('email');
         var text = replacePlaceHolder(verificationText, options);
         var subject = replacePlaceHolder(verificationSubject, options);
+        var sendgridTemplateId = verification.sendgridTemplateId;
 
-        _this.sendMail({ text: text, to: to, subject: subject }).then(function (json) {
-          resolve(json);
-        }, function (err) {
-          reject(err);
-        });
+        if (sendgridTemplateId) {
+          var sendgrid = require('sendgrid')(verification.sendgridApiKey);
+          var request = sendgrid.emptyRequest();
+          request.body = {
+            from: { email: verification.fromAddress },
+            personalizations: [{
+              to: [{
+                email: to
+              }],
+              substitutions: {
+                '%link%': options.link,
+                '%email%': options.user.get('email'),
+                '%username%': options.user.get('username'),
+                '%appname%': options.appName
+              }
+            }],
+            subject: verification.subject,
+            template_id: verification.sendgridTemplateId
+          };
+          request.method = 'POST';
+          request.path = '/v3/mail/send';
+          sendgrid.API(request, function (error, response) {
+            if (error) {
+              reject(error);
+            } else {
+              resolve(response);
+            }
+          });
+        } else {
+          _this.sendMail({ text: text, to: to, subject: subject }).then(function (json) {
+            resolve(json);
+          }, function (err) {
+            reject(err);
+          });
+        }
       });
     };
   }
@@ -64,12 +101,12 @@ var MailTemplateAdapter = function MailTemplateAdapter(mailOptions) {
       throw 'MailTemplateAdapter resetPassword requires subject.';
     }
     var resetPasswordSubject = resetPassword.subject;
-    var resetPasswordText = "";
+    var resetPasswordText = '';
 
     if (resetPassword.body) {
       resetPasswordText = resetPassword.body;
     } else if (resetPassword.bodyFile) {
-      resetPasswordText = _fs2.default.readFileSync(resetPassword.bodyFile, "utf8");
+      resetPasswordText = _fs2.default.readFileSync(resetPassword.bodyFile, 'utf8');
     } else if (resetPassword.sendgridTemplateId) {
       if (!resetPassword.fromAddress) {
         throw 'MailTemplateAdapter resetPassword requires fromAddress when use sendgrid.';
@@ -81,11 +118,11 @@ var MailTemplateAdapter = function MailTemplateAdapter(mailOptions) {
       throw 'MailTemplateAdapter resetPassword requires body.';
     }
 
-    customeized.sendPasswordResetEmail = function (options) {
+    customized.sendPasswordResetEmail = function (options) {
       var _this2 = this;
 
       return new Promise(function (resolve, reject) {
-        var to = options.user.get("email");
+        var to = options.user.get('email');
         var subject = replacePlaceHolder(resetPasswordSubject, options);
         var html = replacePlaceHolder(resetPasswordText, options);
         var sendgridTemplateId = resetPassword.sendgridTemplateId;
@@ -100,8 +137,8 @@ var MailTemplateAdapter = function MailTemplateAdapter(mailOptions) {
               }],
               substitutions: {
                 '%link%': options.link,
-                '%email%': options.user.get("email"),
-                '%username%': options.user.get("username"),
+                '%email%': options.user.get('email'),
+                '%username%': options.user.get('username'),
                 '%appname%': options.appName
               }
             }],
@@ -128,7 +165,7 @@ var MailTemplateAdapter = function MailTemplateAdapter(mailOptions) {
     };
   }
 
-  return Object.freeze(Object.assign(customeized, adapter));
+  return Object.freeze(Object.assign(customized, adapter));
 };
 
 module.exports = MailTemplateAdapter;

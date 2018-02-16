@@ -1,97 +1,61 @@
 import fs from 'fs';
 
 let replacePlaceHolder = (text, options) => {
-  return text.replace(/%email%/g, options.user.get("email"))
-    .replace(/%username%/g, options.user.get("username"))
+  return text
+    .replace(/%email%/g, options.user.get('email'))
+    .replace(/%username%/g, options.user.get('username'))
     .replace(/%appname%/g, options.appName)
     .replace(/%link%/g, options.link);
-}
+};
 
 let MailTemplateAdapter = mailOptions => {
   if (!mailOptions || !mailOptions.adapter) {
     throw 'MailTemplateAdapter requires an adapter.';
   }
-  var adapter = mailOptions.adapter;
+  const adapter = mailOptions.adapter;
 
   if (!mailOptions.template) {
     return adapter;
   }
 
-  var customeized = {}
+  const customized = {};
 
   if (mailOptions.template.verification) {
-    var verification = mailOptions.template.verification;
+    const verification = mailOptions.template.verification;
 
     if (!verification.subject) {
       throw 'MailTemplateAdapter verification requires subject.';
     }
-    var verificationSubject = verification.subject;
-    var verificationText = "";
+    const verificationSubject = verification.subject;
+    let verificationText = '';
 
     if (verification.body) {
       verificationText = verification.body;
-    }
-    else if (verification.bodyFile) {
-      verificationText = fs.readFileSync(verification.bodyFile, "utf8");
-    }
-    else {
+    } else if (verification.bodyFile) {
+      verificationText = fs.readFileSync(verification.bodyFile, 'utf8');
+    } else if (verification.sendgridTemplateId) {
+      if (!verification.fromAddress) {
+        throw 'MailTemplateAdapter verification requires fromAddress when use sendgrid.';
+      }
+      if (!verification.sendgridApiKey) {
+        throw 'MailTemplateAdapter verification requires sendgridApiKey when use sendgrid';
+      }
+    } else {
       throw 'MailTemplateAdapter verification requires body.';
     }
 
-    customeized.sendVerificationEmail = function (options) {
+    customized.sendVerificationEmail = function(options) {
       return new Promise((resolve, reject) => {
+        const to = options.user.get('email');
+        const text = replacePlaceHolder(verificationText, options);
+        const subject = replacePlaceHolder(verificationSubject, options);
+        const sendgridTemplateId = verification.sendgridTemplateId;
 
-        var to = options.user.get("email");
-        var text = replacePlaceHolder(verificationText, options);
-        var subject = replacePlaceHolder(verificationSubject, options);
-
-        this.sendMail({ text: text, to: to, subject: subject }).then(json => {
-          resolve(json);
-        }, err => {
-          reject(err);
-        });
-      });
-    };
-  }
-
-  if (mailOptions.template.resetPassword) {
-    var resetPassword = mailOptions.template.resetPassword;
-
-    if (!resetPassword.subject) {
-      throw 'MailTemplateAdapter resetPassword requires subject.';
-    }
-    var resetPasswordSubject = resetPassword.subject;
-    var resetPasswordText = "";
-
-    if (resetPassword.body) {
-      resetPasswordText = resetPassword.body;
-    }
-    else if (resetPassword.bodyFile) {
-      resetPasswordText = fs.readFileSync(resetPassword.bodyFile, "utf8");
-    }
-    else if (resetPassword.sendgridTemplateId) {
-      if (!resetPassword.fromAddress) {
-        throw 'MailTemplateAdapter resetPassword requires fromAddress when use sendgrid.';
-      }
-      if (!resetPassword.sendgridApiKey) {
-        throw 'MailTemplateAdapter resetPassword requires sendgridApiKey when use sendgrid';
-      }
-    }
-    else if (!resetPassword.sendgridTemplateId) {
-      throw 'MailTemplateAdapter resetPassword requires body.';
-    }
-
-    customeized.sendPasswordResetEmail = function (options) {
-      return new Promise((resolve, reject) => {
-        var to = options.user.get("email");
-        var subject = replacePlaceHolder(resetPasswordSubject, options);
-        var html = replacePlaceHolder(resetPasswordText, options);
-        var sendgridTemplateId = resetPassword.sendgridTemplateId;
         if (sendgridTemplateId) {
-          const sendgrid = require('sendgrid')(resetPassword.sendgridApiKey);
-          var request = sendgrid.emptyRequest();
+          const sendgrid = require('sendgrid')(verification.sendgridApiKey);
+          const request = sendgrid.emptyRequest();
           request.body = {
-            from: { email: resetPassword.fromAddress },
+            from: { email: verification.fromAddress },
             personalizations: [
               {
                 to: [
@@ -101,14 +65,14 @@ let MailTemplateAdapter = mailOptions => {
                 ],
                 substitutions: {
                   '%link%': options.link,
-                  '%email%': options.user.get("email"),
-                  '%username%': options.user.get("username"),
+                  '%email%': options.user.get('email'),
+                  '%username%': options.user.get('username'),
                   '%appname%': options.appName
                 }
               }
             ],
-            subject: resetPassword.subject,
-            template_id: resetPassword.sendgridTemplateId,
+            subject: verification.subject,
+            template_id: verification.sendgridTemplateId
           };
           request.method = 'POST';
           request.path = '/v3/mail/send';
@@ -120,18 +84,96 @@ let MailTemplateAdapter = mailOptions => {
             }
           });
         } else {
-          this.sendMail({ html: html, to: to, subject: subject }).then(json => {
-            resolve(json);
-          }, err => {
-            reject(err);
-          });
+          this.sendMail({ text: text, to: to, subject: subject }).then(
+            json => {
+              resolve(json);
+            },
+            err => {
+              reject(err);
+            }
+          );
         }
       });
     };
   }
 
+  if (mailOptions.template.resetPassword) {
+    const resetPassword = mailOptions.template.resetPassword;
 
-  return Object.freeze(Object.assign(customeized, adapter));
-}
+    if (!resetPassword.subject) {
+      throw 'MailTemplateAdapter resetPassword requires subject.';
+    }
+    const resetPasswordSubject = resetPassword.subject;
+    let resetPasswordText = '';
 
-module.exports = MailTemplateAdapter
+    if (resetPassword.body) {
+      resetPasswordText = resetPassword.body;
+    } else if (resetPassword.bodyFile) {
+      resetPasswordText = fs.readFileSync(resetPassword.bodyFile, 'utf8');
+    } else if (resetPassword.sendgridTemplateId) {
+      if (!resetPassword.fromAddress) {
+        throw 'MailTemplateAdapter resetPassword requires fromAddress when use sendgrid.';
+      }
+      if (!resetPassword.sendgridApiKey) {
+        throw 'MailTemplateAdapter resetPassword requires sendgridApiKey when use sendgrid';
+      }
+    } else if (!resetPassword.sendgridTemplateId) {
+      throw 'MailTemplateAdapter resetPassword requires body.';
+    }
+
+    customized.sendPasswordResetEmail = function(options) {
+      return new Promise((resolve, reject) => {
+        const to = options.user.get('email');
+        const subject = replacePlaceHolder(resetPasswordSubject, options);
+        const html = replacePlaceHolder(resetPasswordText, options);
+        const sendgridTemplateId = resetPassword.sendgridTemplateId;
+        if (sendgridTemplateId) {
+          const sendgrid = require('sendgrid')(resetPassword.sendgridApiKey);
+          const request = sendgrid.emptyRequest();
+          request.body = {
+            from: { email: resetPassword.fromAddress },
+            personalizations: [
+              {
+                to: [
+                  {
+                    email: to
+                  }
+                ],
+                substitutions: {
+                  '%link%': options.link,
+                  '%email%': options.user.get('email'),
+                  '%username%': options.user.get('username'),
+                  '%appname%': options.appName
+                }
+              }
+            ],
+            subject: resetPassword.subject,
+            template_id: resetPassword.sendgridTemplateId
+          };
+          request.method = 'POST';
+          request.path = '/v3/mail/send';
+          sendgrid.API(request, (error, response) => {
+            if (error) {
+              reject(error);
+            } else {
+              resolve(response);
+            }
+          });
+        } else {
+          this.sendMail({ html: html, to: to, subject: subject }).then(
+            json => {
+              resolve(json);
+            },
+            err => {
+              reject(err);
+            }
+          );
+        }
+      });
+    };
+  }
+
+  return Object.freeze(Object.assign(customized, adapter));
+};
+
+module.exports = MailTemplateAdapter;
