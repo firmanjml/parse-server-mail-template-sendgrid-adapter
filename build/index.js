@@ -6,161 +6,67 @@ var _fs2 = _interopRequireDefault(_fs);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-var replacePlaceHolder = function replacePlaceHolder(text, options) {
-  return text.replace(/%email%/g, options.user.get('email')).replace(/%username%/g, options.user.get('username')).replace(/%appname%/g, options.appName).replace(/%link%/g, options.link);
-};
-
-var MailTemplateAdapter = function MailTemplateAdapter(mailOptions) {
+module.exports = function (mailOptions) {
   if (!mailOptions || !mailOptions.adapter) {
-    throw 'MailTemplateAdapter requires an adapter.';
+    throw 'MailTemplateAdapter requires an adapter';
   }
-  var adapter = mailOptions.adapter;
+
+  var adapter = mailOptions.adapter,
+      apiKey = mailOptions.apiKey,
+      fromAddress = mailOptions.fromAddress;
+
 
   if (!mailOptions.template) {
-    return adapter;
+    return mailOptions.adapter;
+  }
+
+  if (!fromAddress) {
+    throw 'MailTemplateAdapter requires a fromAddress';
+  }
+  if (!apiKey) {
+    throw 'MailTemplateAdapter requires a apiKey';
   }
 
   var customized = {};
 
   if (mailOptions.template.verification) {
-    var verification = mailOptions.template.verification;
+    var templateId = mailOptions.template.verification.templateId;
 
-    if (!verification.subject) {
-      throw 'MailTemplateAdapter verification requires subject.';
-    }
-    var verificationSubject = verification.subject;
-    var verificationText = '';
 
-    if (verification.body) {
-      verificationText = verification.body;
-    } else if (verification.bodyFile) {
-      verificationText = _fs2.default.readFileSync(verification.bodyFile, 'utf8');
-    } else if (verification.sendgridTemplateId) {
-      if (!verification.fromAddress) {
-        throw 'MailTemplateAdapter verification requires fromAddress when use sendgrid.';
-      }
-      if (!verification.sendgridApiKey) {
-        throw 'MailTemplateAdapter verification requires sendgridApiKey when use sendgrid';
-      }
-    } else {
-      throw 'MailTemplateAdapter verification requires body.';
+    if (!templateId) {
+      throw 'MailTemplateAdapter requires a template id';
     }
 
     customized.sendVerificationEmail = function (options) {
-      var _this = this;
-
-      return new Promise(function (resolve, reject) {
-        var to = options.user.get('email');
-        var text = replacePlaceHolder(verificationText, options);
-        var subject = replacePlaceHolder(verificationSubject, options);
-        var sendgridTemplateId = verification.sendgridTemplateId;
-
-        if (sendgridTemplateId) {
-          var sendgrid = require('sendgrid')(verification.sendgridApiKey);
-          var request = sendgrid.emptyRequest();
-          request.body = {
-            from: { email: verification.fromAddress },
-            personalizations: [{
-              to: [{
-                email: to
-              }],
-              substitutions: {
-                '%link%': options.link,
-                '%email%': options.user.get('email'),
-                '%username%': options.user.get('username'),
-                '%appname%': options.appName
-              }
-            }],
-            subject: verification.subject,
-            template_id: verification.sendgridTemplateId
-          };
-          request.method = 'POST';
-          request.path = '/v3/mail/send';
-          sendgrid.API(request, function (error, response) {
-            if (error) {
-              reject(error);
-            } else {
-              resolve(response);
-            }
-          });
-        } else {
-          _this.sendMail({ text: text, to: to, subject: subject }).then(function (json) {
-            resolve(json);
-          }, function (err) {
-            reject(err);
-          });
-        }
+      return sendTemplate({
+        link: options.link,
+        email: options.user.get('email'),
+        username: options.user.get('username'),
+        appName: options.appName,
+        templateId: templateId,
+        apiKey: apiKey,
+        fromAddress: fromAddress
       });
     };
   }
 
   if (mailOptions.template.resetPassword) {
-    var resetPassword = mailOptions.template.resetPassword;
+    var _templateId = mailOptions.template.resetPassword.templateId;
 
-    if (!resetPassword.subject) {
-      throw 'MailTemplateAdapter resetPassword requires subject.';
-    }
-    var resetPasswordSubject = resetPassword.subject;
-    var resetPasswordText = '';
 
-    if (resetPassword.body) {
-      resetPasswordText = resetPassword.body;
-    } else if (resetPassword.bodyFile) {
-      resetPasswordText = _fs2.default.readFileSync(resetPassword.bodyFile, 'utf8');
-    } else if (resetPassword.sendgridTemplateId) {
-      if (!resetPassword.fromAddress) {
-        throw 'MailTemplateAdapter resetPassword requires fromAddress when use sendgrid.';
-      }
-      if (!resetPassword.sendgridApiKey) {
-        throw 'MailTemplateAdapter resetPassword requires sendgridApiKey when use sendgrid';
-      }
-    } else if (!resetPassword.sendgridTemplateId) {
-      throw 'MailTemplateAdapter resetPassword requires body.';
+    if (!_templateId) {
+      throw 'MailTemplateAdapter requires a template id';
     }
 
     customized.sendPasswordResetEmail = function (options) {
-      var _this2 = this;
-
-      return new Promise(function (resolve, reject) {
-        var to = options.user.get('email');
-        var subject = replacePlaceHolder(resetPasswordSubject, options);
-        var html = replacePlaceHolder(resetPasswordText, options);
-        var sendgridTemplateId = resetPassword.sendgridTemplateId;
-        if (sendgridTemplateId) {
-          var sendgrid = require('sendgrid')(resetPassword.sendgridApiKey);
-          var request = sendgrid.emptyRequest();
-          request.body = {
-            from: { email: resetPassword.fromAddress },
-            personalizations: [{
-              to: [{
-                email: to
-              }],
-              substitutions: {
-                '%link%': options.link,
-                '%email%': options.user.get('email'),
-                '%username%': options.user.get('username'),
-                '%appname%': options.appName
-              }
-            }],
-            subject: resetPassword.subject,
-            template_id: resetPassword.sendgridTemplateId
-          };
-          request.method = 'POST';
-          request.path = '/v3/mail/send';
-          sendgrid.API(request, function (error, response) {
-            if (error) {
-              reject(error);
-            } else {
-              resolve(response);
-            }
-          });
-        } else {
-          _this2.sendMail({ html: html, to: to, subject: subject }).then(function (json) {
-            resolve(json);
-          }, function (err) {
-            reject(err);
-          });
-        }
+      return sendTemplate({
+        link: options.link,
+        email: options.user.get('email'),
+        username: options.user.get('username'),
+        appName: options.appName,
+        templateId: _templateId,
+        apiKey: apiKey,
+        fromAddress: fromAddress
       });
     };
   }
@@ -168,4 +74,37 @@ var MailTemplateAdapter = function MailTemplateAdapter(mailOptions) {
   return Object.freeze(Object.assign(customized, adapter));
 };
 
-module.exports = MailTemplateAdapter;
+var replacePlaceHolder = function replacePlaceHolder(text, options) {
+  return text.replace(/%email%/g, options.user.get('email')).replace(/%username%/g, options.user.get('username')).replace(/%appname%/g, options.appName).replace(/%link%/g, options.link);
+};
+
+function sendTemplate(params) {
+  var sendgrid = require('sendgrid')(params.apiKey);
+  var email = params.email,
+      link = params.link,
+      username = params.username,
+      appName = params.appName,
+      fromAddress = params.fromAddress,
+      templateId = params.templateId;
+
+  var template_id = templateId;
+  var request = sendgrid.emptyRequest();
+  request.body = {
+    from: { email: fromAddress },
+    personalizations: [{
+      to: [{
+        email: email
+      }],
+      substitutions: {
+        '%link%': link,
+        '%email%': email,
+        '%username%': username,
+        '%appname%': appName
+      }
+    }],
+    template_id: template_id
+  };
+  request.method = 'POST';
+  request.path = '/v3/mail/send';
+  return sendgrid.API(request);
+}
