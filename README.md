@@ -12,7 +12,7 @@ npm install @innocells/parse-server-mail-template-sendgrid-adapter --save
 
     const ParseServer = require('parse-server').ParseServer;
     const SimpleSendGridAdapter = require('parse-server-sendgrid-adapter');
-    const MailTemplateAdapter = require('parse-server-mail-template-adapter');
+    const MailTemplateAdapter = require('@innocells/parse-server-mail-template-sendgrid-adapter');
 
     const api = new ParseServer({
       // ... Other necessary parameters ...
