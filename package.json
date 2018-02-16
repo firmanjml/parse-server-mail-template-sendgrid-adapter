@@ -1,6 +1,6 @@
 {
   "name": "@innocells/parse-server-mail-template-sendgrid-adapter",
-  "version": "2.0.1",
+  "version": "2.0.2",
   "description": "Adapter for using customizing email template of parse-server using sendgrid",
   "main": "build/index.js",
   "scripts": {
