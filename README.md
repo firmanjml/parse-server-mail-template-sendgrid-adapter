@@ -26,6 +26,7 @@ npm install @innocells/parse-server-mail-template-sendgrid-adapter --save
         }),
         apiKey: 'sendgridApiKey',
         fromAddress: 'fromEmailAddress',
+        fromName: 'fromName',
         template: {
           verification: {
             templateId: 'templateId'
