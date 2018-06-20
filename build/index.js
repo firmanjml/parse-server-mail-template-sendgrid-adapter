@@ -13,8 +13,8 @@ module.exports = function (mailOptions) {
 
   var adapter = mailOptions.adapter,
       apiKey = mailOptions.apiKey,
-      fromAddress = mailOptions.fromAddress;
-
+      fromAddress = mailOptions.fromAddress,
+      fromName = mailOptions.fromName;
 
   if (!mailOptions.template) {
     return mailOptions.adapter;
@@ -22,6 +22,9 @@ module.exports = function (mailOptions) {
 
   if (!fromAddress) {
     throw 'MailTemplateAdapter requires a fromAddress';
+  }
+  if (!fromName) {
+    throw 'MailTemplateAdapter requires a fromName';
   }
   if (!apiKey) {
     throw 'MailTemplateAdapter requires a apiKey';
@@ -45,7 +48,8 @@ module.exports = function (mailOptions) {
         appName: options.appName,
         templateId: templateId,
         apiKey: apiKey,
-        fromAddress: fromAddress
+        fromAddress: fromAddress,
+        fromName: fromName
       });
     };
   }
@@ -66,7 +70,8 @@ module.exports = function (mailOptions) {
         appName: options.appName,
         templateId: _templateId,
         apiKey: apiKey,
-        fromAddress: fromAddress
+        fromAddress: fromAddress,
+        fromName: fromName
       });
     };
   }
@@ -85,12 +90,13 @@ function sendTemplate(params) {
       username = params.username,
       appName = params.appName,
       fromAddress = params.fromAddress,
+      fromName = params.fromName,
       templateId = params.templateId;
 
   var template_id = templateId;
   var request = sendgrid.emptyRequest();
   request.body = {
-    from: { email: fromAddress },
+    from: { email: fromAddress, name: fromName },
     personalizations: [{
       to: [{
         email: email
