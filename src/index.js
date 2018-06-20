@@ -5,7 +5,7 @@ module.exports = mailOptions => {
     throw 'MailTemplateAdapter requires an adapter';
   }
 
-  const { adapter, apiKey, fromAddress } = mailOptions;
+  const { adapter, apiKey, fromAddress, fromName } = mailOptions;
 
   if (!mailOptions.template) {
     return mailOptions.adapter;
@@ -13,6 +13,9 @@ module.exports = mailOptions => {
 
   if (!fromAddress) {
     throw 'MailTemplateAdapter requires a fromAddress';
+  }
+  if (!fromName) {
+    throw 'MailTemplateAdapter requires a fromName';
   }
   if (!apiKey) {
     throw 'MailTemplateAdapter requires a apiKey';
@@ -35,7 +38,8 @@ module.exports = mailOptions => {
         appName: options.appName,
         templateId,
         apiKey,
-        fromAddress
+        fromAddress,
+        fromName
       });
   }
 
@@ -54,7 +58,8 @@ module.exports = mailOptions => {
         appName: options.appName,
         templateId,
         apiKey,
-        fromAddress
+        fromAddress,
+        fromName
       });
   }
 
@@ -70,11 +75,11 @@ const replacePlaceHolder = (text, options) =>
 
 function sendTemplate(params) {
   const sendgrid = require('sendgrid')(params.apiKey);
-  const { email, link, username, appName, fromAddress, templateId } = params;
+  const { email, link, username, appName, fromAddress, fromName, templateId } = params;
   const template_id = templateId;
   const request = sendgrid.emptyRequest();
   request.body = {
-    from: { email: fromAddress },
+    from: { email: fromAddress, name: fromName },
     personalizations: [
       {
         to: [
